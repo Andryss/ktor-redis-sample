@@ -8,9 +8,10 @@ import org.redisson.Redisson
 import org.redisson.api.RedissonClient
 import org.redisson.config.Config
 
-const val messagesTopic = "messages"
-
 lateinit var client: RedissonClient
+
+const val messagesTopic = "messages"
+data class Message(val message: String, val magic: Int)
 
 fun configureRedis() {
     val config = Config()
@@ -18,7 +19,7 @@ fun configureRedis() {
     config.useSingleServer().address = "redis://localhost:6379"
     client = Redisson.create(config)
 
-    client.getTopic(messagesTopic).addListener(String::class.java) { channel, msg ->
+    client.getTopic(messagesTopic).addListener(Message::class.java) { channel, msg ->
         println("channel: $channel, msg: $msg")
     }
 }
@@ -28,7 +29,7 @@ fun Routing.messageRouting() {
         val message = call.request.queryParameters["message"] ?: return@post call.respondText(
             "Required request param \"message\" is missing", status = HttpStatusCode.BadRequest
         )
-        client.getTopic(messagesTopic).publish(message)
+        client.getTopic(messagesTopic).publish(Message(message, 42))
         call.respond(HttpStatusCode.OK)
     }
 }

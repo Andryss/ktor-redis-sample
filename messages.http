@@ -1,1 +1,2 @@
+### Post new message
 POST localhost:8080/messages?message=simple
